@@ -6,3 +6,4 @@ numpy
 requests
 mcp
 langchain_groq
+langchain-chroma
