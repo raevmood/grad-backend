@@ -1,12 +1,7 @@
-"""
-Main EventHub chatbot class
-Combines all components: LLM, memory, retriever, and prompts
-"""
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from retriever import EventHubRetriever
+from dual_retriever import DualRAGRetriever  # Updated import
 from llm_provider import LLMManager
 from prompt import EventHubPrompts
 from memory import EventHubMemory
@@ -17,14 +12,14 @@ load_dotenv()
 
 app = FastAPI(
     title="EventHub Chatbot API",
-    description="LangChain-powered chatbot with retrieval and memory",
+    description="LangChain-powered chatbot with dual RAG (local + events)",
     version="1.0.0"
 )
 
 # Configure CORS for localhost testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:8000"],
+    allow_origins=["http://localhost:3000", "http://localhost:8080", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -34,11 +29,12 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
     session_id: str = "default"
-    use_retrieval: bool = True
+    retrieval_mode: str = "combined"  # "combined", "local", "events", "none"
 
 class ChatResponse(BaseModel):
     response: str
     session_id: str
+    sources_used: list[str]
 
 # Global chatbot instances cache
 chatbots = {}
@@ -51,12 +47,14 @@ def get_chatbot(session_id: str) -> "EventHubChatbot":
 
 class EventHubChatbot:
     def __init__(self, session_id: str = "default"):
-        """Initialize all chatbot components"""
+        """Initialize all chatbot components with dual RAG"""
         try:
-            self.retriever = EventHubRetriever()
+            self.retriever = DualRAGRetriever()  # Updated to dual retriever
+            self.retriever_available = True
         except Exception as e:
             print(f"✗ Retriever error: {e}")
             self.retriever = None
+            self.retriever_available = False
         
         try:
             self.llm = LLMManager()
@@ -67,56 +65,86 @@ class EventHubChatbot:
         self.prompts = EventHubPrompts()
         self.memory = EventHubMemory(session_id=session_id)
     
-    def get_response(self, user_input: str, use_retrieval: bool = True) -> str:
-        """Get chatbot response to user input"""
+    def get_response(self, user_input: str, retrieval_mode: str = "combined") -> tuple[str, list[str]]:
+        """Get chatbot response with flexible retrieval options"""
         try:
             context = ""
-            if use_retrieval and self.retriever:
-                context = self.retriever.get_formatted_context(user_input, n_results=2)
+            sources_used = []
             
+            # Get context based on retrieval mode
+            if self.retriever_available and retrieval_mode != "none":
+                if retrieval_mode == "combined":
+                    context = self.retriever.get_formatted_context(user_input, n_results=2)
+                    sources_used = ["knowledge_base", "current_events"]
+                elif retrieval_mode == "local":
+                    context = self.retriever.get_local_context_only(user_input, n_results=2)
+                    sources_used = ["knowledge_base"]
+                elif retrieval_mode == "events":
+                    context = self.retriever.get_events_context_only(user_input)
+                    sources_used = ["current_events"]
+            
+            # Create messages with context and history
             messages = self.prompts.create_messages(
                 human_input=user_input,
                 context=context,
                 chat_history=self.memory.get_recent_messages(6)
             )
             
+            # Get LLM response
             response = self.llm.get_response(messages)
             
+            # Save to memory
             self.memory.add_user_message(user_input)
             self.memory.add_ai_message(response)
             
-            return response
+            return response, sources_used
             
         except Exception as e:
             error_msg = f"I encountered an error: {str(e)[:100]}. Please try again."
             self.memory.add_user_message(user_input)
             self.memory.add_ai_message(error_msg)
-            return error_msg
+            return error_msg, ["error"]
 
 @app.get("/")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "EventHub Chatbot API is running"}
+    return {"status": "EventHub Chatbot API with Dual RAG is running"}
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-    """Main chat endpoint"""
+    """Main chat endpoint with flexible retrieval options"""
     try:
         chatbot = get_chatbot(request.session_id)
-        response = chatbot.get_response(request.message, request.use_retrieval)
+        response, sources = chatbot.get_response(
+            request.message, 
+            request.retrieval_mode
+        )
         
         return ChatResponse(
             response=response,
-            session_id=request.session_id
+            session_id=request.session_id,
+            sources_used=sources
         )
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/chat/local")
+async def chat_local_only(request: ChatRequest):
+    """Chat endpoint using only local knowledge base"""
+    request.retrieval_mode = "local"
+    return await chat_endpoint(request)
+
+@app.post("/chat/events") 
+async def chat_events_only(request: ChatRequest):
+    """Chat endpoint using only event search"""
+    request.retrieval_mode = "events"
+    return await chat_endpoint(request)
+
 if __name__ == "__main__":
     uvicorn.run(
         "chatbot:app",
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=8000,
         reload=True
     )
