@@ -1,0 +1,22 @@
+{
+  "session_id": "cli_session",
+  "timestamp": "2025-09-08T22:53:25.643810",
+  "messages": [
+    {
+      "type": "human",
+      "content": "What events cant i create?"
+    },
+    {
+      "type": "ai",
+      "content": "I cannot provide a complete list of prohibited events without more information.  To avoid issues, please review our community guidelines. If you have questions after reviewing them, please contact customer service."
+    },
+    {
+      "type": "human",
+      "content": "I'm an organiser. What events can i not create?"
+    },
+    {
+      "type": "ai",
+      "content": "To ensure your event is approved, please avoid creating events that promote hate speech, illegal activities, or misinformation.  For a complete list of prohibited events and detailed guidelines, please refer to our help center."
+    }
+  ]
+}

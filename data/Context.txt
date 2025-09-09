@@ -1,0 +1,202 @@
+USER INSTRUCTION INFO
+1. Logging In
+Open the EventHub app on your phone or browser.
+Log in using your email, Google, or social account.
+Once logged in, you will see a personalized homepage with events recommended for you.
+2. Browsing Events with AI Search
+EventHub’s AI Assistant makes searching for events simple and natural:
+In the search bar at the top of your homepage, type what you are looking for in plain language.
+Example: “free yoga class tomorrow near me”
+The AI understands your request and searches events by meaning, not just keywords.
+You will see results based on:
+Category matches (yoga, art, workshops, music, etc.)
+Location relevance (your city or neighborhood)
+Filters (price = free, date = tomorrow)
+Tip: If you are unsure what to search for, you can ask the AI Assistant something casual such as “What’s happening this weekend?”
+3. Event Discovery Page
+When you click on an event, you will see:
+Title, date, time, and location (with a map pin)
+Event description and images
+AI-generated tags (for example: #art, #beginner-friendly, #social)
+Risk-checked status (moderated by our team with AI support for your safety)
+4. Booking an Event (RSVP)
+Click the “RSVP” button on the event page.
+You will immediately see a confirmation screen with options to:
+Add to Calendar (Google, Apple, Outlook, etc.)
+Share with Friends (WhatsApp, Instagram, etc.)
+You will also receive a confirmation email with all the event details and a calendar invite.
+5. Notifications and Updates
+If an organizer updates event details (such as changing the time or venue), you will automatically receive an email notification.
+You can manage your notifications in your profile settings.
+6. Reminder Before the Event
+Twenty-four hours before the event, the AI Assistant sends you a personalized reminder.
+The reminder includes event name, time, and location, along with a quick travel suggestion (map link).
+You may also receive a helpful note such as “Don’t forget to bring your sketchbook for tomorrow’s Life Drawing Workshop.”
+7. Getting Help
+At any point, you can open the AI Chat Assistant in the app to ask questions such as:
+“How do I change my RSVP?”
+“Can I see only family-friendly events?”
+“What events are my friends attending?”
+The Assistant will guide you step by step.
+Summary of Your Journey
+Log in and see your personalized event feed.
+Search naturally, for example: “free concert tonight,” and the AI will find it.
+Open the event page to view AI-tagged details and verified status.
+Book with one tap, receiving RSVP confirmation, a calendar invite, and a confirmation email.
+Stay updated if anything changes.
+Receive a reminder 24 hours before the event.
+EventHub AI Assistant helps you spend less time searching and more time enjoying meaningful experiences.
+EVENT CREATOR INSTRUCTION INFO
+1. Logging In
+Open the EventHub app or website.
+Log in with your organizer account (email, Google, or social login).
+Once logged in, you will see the “Organizer Dashboard.”
+2. Creating an Event
+Click Create New Event on your dashboard.
+Fill in the event form:
+Title
+Date and Time
+Location (address or map pin)
+Description
+Images or poster (optional but encouraged)
+Add URLs if you have a ticketing site, live stream link, or additional resources.
+The AI Assistant helps by:
+Suggesting tags and categories based on your description.
+Checking for clarity and completeness in your event details.
+Running a risk assessment to flag anything suspicious or incomplete before submission.
+3. Review and Moderation
+After submission, your event is reviewed by moderators with AI support.
+Risk scores and automated checks assist moderators in verifying legitimacy.
+You will be notified once your event is approved and published.
+4. Managing Your Events
+From your Organizer Dashboard, you can:
+Edit event details (time, venue, description).
+Upload additional media.
+Cancel or reschedule if necessary.
+Changes automatically update on the attendee side, and users who RSVP’d are notified.
+5. Discoverability and Search
+Once approved, your event is stored in EventHub’s vector database.
+This means attendees can find your event through semantic search, not just exact keywords.
+Example: A user searching “free outdoor fitness near me” might discover your yoga session even if you titled it “Morning Wellness Flow.”
+The AI Assistant improves visibility by attaching helpful tags and categories.
+6. Tracking Engagement
+You can see RSVPs in your dashboard.
+AI Assistant provides insights such as:
+Typical attendee interests
+Engagement trends (for example: more people RSVP at night vs. morning)
+These insights help you plan future events.
+7. Notifications and Communication
+Attendees receive an automatic email when you post an update.
+The AI Assistant can help draft clear, concise updates to your audience.
+A 24-hour reminder is sent to all RSVPs without you needing to take action.
+8. Getting Help
+At any point, you can ask the AI Assistant:
+“How do I reschedule an event?”
+“What tags should I use for more visibility?”
+“How can I encourage more RSVPs?”
+The assistant will guide you through best practices.
+Summary of Your Journey as a Creator
+Log in and access your Organizer Dashboard.
+Create an event by filling in basic details, assisted by AI tagging and risk checks.
+Submit for moderator approval.
+Once approved, your event is published and searchable.
+Manage updates, cancellations, or edits directly from your dashboard.
+Attendees are automatically notified and reminded before the event.
+Use AI insights to improve future events.
+EventHub AI Assistant helps you focus on hosting great events while the system handles discoverability, communication, and reminders.
+MODERATOR INSTRUCTIONS INFO
+As a moderator on EventHub, your role is to ensure events are safe, authentic, and aligned with community guidelines. The AI Assistant supports you by providing automated risk assessments, semantic tagging, and streamlined approval workflows.
+1. Logging In
+Access the EventHub Moderator Dashboard via the app or website.
+Log in with your moderator credentials.
+You will land on the Moderation Panel, which displays pending, approved, and flagged events.
+2. Reviewing New Event Submissions
+When a creator submits an event:
+The event appears in your “Pending Review” list.
+Each submission includes:
+Title, description, images, and links
+Location and date/time
+AI-generated tags and category suggestions
+AI Risk Score (evaluating the likelihood of spam, misinformation, or suspicious activity)
+3. Using the AI Risk Assessment
+The risk score is calculated from the event’s title, description, and any URLs provided.
+The Assistant highlights:
+Possible fake or spam signals
+Incomplete or unclear information
+Duplicate or suspicious entries
+You can view detailed AI reasoning alongside the score to inform your decision.
+4. Approval or Rejection Workflow
+If legitimate and compliant: click Approve.
+The event is published to the attendee-facing search and listings.
+The organizer is notified instantly.
+If not approved: click Reject.
+A prompt asks you to provide a reason (e.g., “duplicate,” “incomplete,” or “guideline violation”).
+The creator receives an email with your note and instructions for resubmission.
+If uncertain: click Flag for Review.
+The event is moved into a secondary queue for further moderator or admin inspection.
+5. AI-Powered Efficiency Tools
+The AI Assistant streamlines your tasks by:
+Pre-categorizing events into themes (e.g., “Music,” “Community,” “Workshop”).
+Suggesting clarifications to send back to the organizer.
+Detecting repeated or recycled event text to catch spam campaigns.
+6. Post-Approval Monitoring
+Even after approval, the AI system continues monitoring for:
+Spam reports
+Broken or malicious URLs
+Sudden surge of suspicious RSVPs
+You receive alerts in the dashboard if intervention is needed.
+7. Moderator Communication Tools
+The AI Assistant can draft standardized communication messages to organizers, saving time.
+You can customize responses when additional detail is needed.
+8. Summary of Moderator Journey
+Log in to the Moderator Dashboard.
+Open the Pending Review queue.
+Review event details along with AI risk score and insights.
+Approve, Reject (with reason), or Flag for further review.
+Rely on AI categorization and tagging for efficiency.
+Monitor approved events through automated alerts and reports.
+Use AI drafting assistance to communicate with organizers effectively.
+Key Benefit
+EventHub’s AI Assistant allows moderators to focus on judgment and community safety while automating repetitive checks, categorization, and risk detection.
+Attendee Journey: An attendee begins by logging into EventHub and accessing the home interface. 
+They use semantic search powered by natural language understanding to find events, such as typing 
+free yoga tomorrow” or “music nearby,” and the system interprets the request with AI-driven filters. 
+Once the attendee discovers a relevant event, they can RSVP directly, receiving instant confirmation 
+and a calendar invite. As the event date approaches, the platform automatically sends personalized 
+reminders, including a notification 24 hours prior, ensuring the attendee is prepared and engaged.
+
+Creator Journey: An event creator logs in and navigates to the event submission form. They input 
+title, description, date, time, and optional media, while the AI assistant suggests categories, 
+tags, and formatting to improve visibility. Upon submission, the event is stored in the backend 
+and analyzed by an AI agent for risk and quality scoring before being queued for moderator review. 
+Once approved, the event is published to the attendee-facing platform and indexed in the vector database 
+for semantic discovery, enabling better reach and searchability. The creator receives immediate status 
+updates via email or dashboard alerts when their event is approved or requires revision.
+
+Moderator Journey: A moderator accesses the moderation dashboard, where pending events are displayed 
+with AI-generated metadata and risk scores. The system highlights suspicious indicators such as spam-like 
+language or broken links, offering reasoning for each assessment. The moderator reviews the details and 
+decides to approve, reject, or flag the event for further investigation, with automated communication 
+sent back to the creator. After approval, the AI continues monitoring for irregularities like sudden 
+RSVP spikes or malicious edits, notifying moderators if intervention is needed. This reduces repetitive 
+workload, enabling moderators to focus on community safety and ensuring only high-quality, trustworthy 
+events are published.
+User Rules: Users must provide accurate information during registration and maintain only one account. 
+They are expected to respect community guidelines by engaging with events in a genuine and constructive way. 
+Misuse of the platform, such as spamming RSVPs, posting inappropriate comments, or attempting to bypass AI 
+or moderation checks, is strictly prohibited. Users must also respect other attendees’ privacy and use the 
+platform for legitimate event discovery and participation only.
+
+Organizer Rules: Organizers must create events that are truthful, relevant, and aligned with community 
+standards. Event details including title, description, location, and attached links must not be misleading 
+or fraudulent. Organizers must not submit duplicate events or use the platform to advertise unrelated 
+products or services. They are responsible for responding promptly if moderators request clarifications 
+and must honor commitments such as updating event details when changes occur. Failure to comply may lead 
+to suspension of organizer privileges.
+
+Moderator Rules: Moderators must act fairly and consistently when reviewing events, using AI-generated 
+insights as support but not as the sole basis for decisions. They are expected to follow platform guidelines 
+when approving, rejecting, or flagging events, and to document reasons for each action taken. Moderators must 
+avoid bias or favoritism and treat all users and organizers equally. They should escalate complex or 
+borderline cases instead of making arbitrary decisions, ensuring trust and transparency in the moderation 
+process.

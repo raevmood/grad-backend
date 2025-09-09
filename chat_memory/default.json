@@ -1,0 +1,22 @@
+{
+  "session_id": "default",
+  "timestamp": "2025-09-08T23:14:14.199841",
+  "messages": [
+    {
+      "type": "human",
+      "content": "Hello"
+    },
+    {
+      "type": "ai",
+      "content": "Hello there!  How can I help you with your events today?  I'm here to assist with anything related to the platform."
+    },
+    {
+      "type": "human",
+      "content": "Hello"
+    },
+    {
+      "type": "ai",
+      "content": "Hello there! How can I help you with your events today? I'm here to assist with anything related to EventHub."
+    }
+  ]
+}
