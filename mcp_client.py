@@ -118,7 +118,8 @@ class EventRAGClient:
             formatted += f"{i}. **{event.get('title', 'Untitled Event')}**\n"
             formatted += f"   📍 {event.get('location', 'Location TBA')}\n"
             formatted += f"   📅 {event.get('startDateTime', 'Date TBA')}\n"
-            formatted += f"   💰 {'Free' if event.get('isFree') else f\"${event.get('price', 'TBA')}\"}\n"
+            price_str = "Free" if event.get("isFree") else f"${event.get('price', 'TBA')}"
+            formatted += f"   💰 {price_str}\n"
             formatted += f"   🏷️ {event.get('category', 'Uncategorized')}\n"
             if event.get('tags'):
                 formatted += f"   🔖 {event.get('tags')}\n"
