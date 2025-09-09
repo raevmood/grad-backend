@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+chromadb
+langchain-google-genai
+numpy
+requests
+mcp
+langchain_groq
