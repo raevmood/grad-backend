@@ -1,42 +1,17 @@
-"""
-MCP Client to connect EventHub RAG tools to LLM
-Updated for current MCP package structure
-"""
-
 import asyncio
 import json
-import subprocess
-from typing import Optional, Dict, Any
+from typing import Dict, Any, Optional
+import httpx
+
 
 class EventRAGClient:
-    def __init__(self, server_path: str = "./mcp_event_server.py"):
-        """Initialize MCP client for EventHub RAG"""
-        self.server_path = server_path
-        self.process = None
-    
-    async def connect(self):
-        """Connect to the MCP server via subprocess"""
-        try:
-            self.process = subprocess.Popen(
-                ["python", self.server_path],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-            
-            print(f"✓ Started MCP server process")
-            return True
-                
-        except Exception as e:
-            print(f"✗ Failed to start MCP server: {e}")
-            raise
-    
-    async def _send_request(self, method: str, params: Dict = None) -> Dict[str, Any]:
+    def __init__(self, base_url: str = "https://sench729-eventhub.hf.space"):
+        self.base_url = base_url.rstrip("/")
+        self.timeout = 30.0
+        print(f"→ EventRAGClient initialized with base_url: {self.base_url}")
+
+    async def _send_request(self, method: str, params: Optional[Dict] = None) -> Dict[str, Any]:
         """Send JSON-RPC request to MCP server"""
-        if not self.process:
-            raise RuntimeError("Not connected to MCP server")
-        
         request = {
             "jsonrpc": "2.0",
             "id": 1,
@@ -44,26 +19,47 @@ class EventRAGClient:
             "params": params or {}
         }
         
+        print(f"→ Sending request: {method} with params: {params}")
+
         try:
-            # Send request
-            request_json = json.dumps(request) + "\n"
-            self.process.stdin.write(request_json)
-            self.process.stdin.flush()
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}/mcp/tools/call", 
+                    json=request
+                )
+                response.raise_for_status()
+                response_data = response.json()
+                
+            print(f"✓ Request {method} completed successfully")
             
-            # Read response
-            response_line = self.process.stdout.readline()
-            response = json.loads(response_line)
-            
-            if "error" in response:
-                raise Exception(f"MCP Error: {response['error']}")
-            
-            return response.get("result", {})
-            
+        except httpx.ConnectError as e:
+            error_msg = f"Connection failed to {self.base_url}: {e}"
+            print(f"✗ {error_msg}")
+            raise Exception(error_msg)
+        except httpx.TimeoutException as e:
+            error_msg = f"Request timeout after {self.timeout}s: {e}"
+            print(f"✗ {error_msg}")
+            raise Exception(error_msg)
+        except httpx.RequestError as e:
+            error_msg = f"Request error: {e}"
+            print(f"✗ {error_msg}")
+            raise Exception(error_msg)
         except Exception as e:
-            raise Exception(f"MCP communication error: {e}")
-    
+            error_msg = f"Unexpected error: {e}"
+            print(f"✗ {error_msg}")
+            raise Exception(error_msg)
+
+        if "error" in response_data:
+            error_msg = f"MCP Error: {response_data['error']}"
+            print(f"✗ {error_msg}")
+            raise Exception(error_msg)
+
+        return response_data.get("result", {})
+
     async def search_events(self, query: str, user_id: str = "default") -> Dict[str, Any]:
         """Search for events using natural language query"""
+        print(f"→ Searching events: query='{query}', user_id='{user_id}'")
+        
         try:
             result = await self._send_request(
                 "tools/call",
@@ -72,92 +68,205 @@ class EventRAGClient:
                     "arguments": {"query": query, "user_id": user_id}
                 }
             )
-            
-            # Parse the text content
+
             if "content" in result and len(result["content"]) > 0:
                 content_text = result["content"][0].get("text", "{}")
-                return json.loads(content_text)
+                parsed_result = json.loads(content_text)
+                
+                # Check if result contains error
+                if "error" in parsed_result:
+                    print(f"✗ Search returned error: {parsed_result['error']}")
+                    return parsed_result
+                
+                event_count = parsed_result.get("results_count", 0)
+                print(f"✓ Search completed: found {event_count} events")
+                return parsed_result
             else:
-                return {"error": "No response from server"}
+                error_msg = "No response content from server"
+                print(f"✗ {error_msg}")
+                return {"error": error_msg}
                 
         except Exception as e:
-            return {"error": f"Search failed: {str(e)}"}
-    
+            error_msg = f"Search failed: {str(e)}"
+            print(f"✗ {error_msg}")
+            return {"error": error_msg}
+
     async def get_all_events(self) -> Dict[str, Any]:
         """Get all available events"""
+        print("→ Fetching all events")
+        
         try:
             result = await self._send_request(
                 "tools/call",
-                {
-                    "name": "get_all_events",
-                    "arguments": {}
-                }
+                {"name": "get_all_events", "arguments": {}}
             )
-            
+
             if "content" in result and len(result["content"]) > 0:
                 content_text = result["content"][0].get("text", "{}")
-                return json.loads(content_text)
+                parsed_result = json.loads(content_text)
+                
+                # Check if result contains error
+                if "error" in parsed_result:
+                    print(f"✗ Get all events returned error: {parsed_result['error']}")
+                    return parsed_result
+                
+                total_events = parsed_result.get("total_events", 0)
+                returned_events = parsed_result.get("returned_events", 0)
+                print(f"✓ Retrieved {returned_events} of {total_events} total events")
+                return parsed_result
             else:
-                return {"error": "No response from server"}
+                error_msg = "No response content from server"
+                print(f"✗ {error_msg}")
+                return {"error": error_msg}
                 
         except Exception as e:
-            return {"error": f"Failed to get events: {str(e)}"}
-    
+            error_msg = f"Failed to get events: {str(e)}"
+            print(f"✗ {error_msg}")
+            return {"error": error_msg}
+
     async def format_events_for_llm(self, events_data: Dict[str, Any]) -> str:
-        """Format event results for LLM consumption"""
-        if "error" in events_data:
-            return f"Error retrieving events: {events_data['error']}"
+        """Format events data for LLM consumption"""
+        print("→ Formatting events for LLM")
         
+        if "error" in events_data:
+            error_msg = f"Error retrieving events: {events_data['error']}"
+            print(f"✗ {error_msg}")
+            return error_msg
+
         events = events_data.get("events", [])
         if not events:
-            return "No events found matching your criteria."
-        
-        formatted = f"Found {events_data.get('results_count', len(events))} events:\n\n"
-        
-        for i, event in enumerate(events[:5], 1):  # Limit to top 5 for LLM context
-            formatted += f"{i}. **{event.get('title', 'Untitled Event')}**\n"
-            formatted += f"   📍 {event.get('location', 'Location TBA')}\n"
-            formatted += f"   📅 {event.get('startDateTime', 'Date TBA')}\n"
-            price_str = "Free" if event.get("isFree") else f"${event.get('price', 'TBA')}"
-            formatted += f"   💰 {price_str}\n"
-            formatted += f"   🏷️ {event.get('category', 'Uncategorized')}\n"
-            if event.get('tags'):
-                formatted += f"   🔖 {event.get('tags')}\n"
-            formatted += "\n"
-        
-        return formatted.strip()
-    
-    def cleanup(self):
-        """Clean up subprocess"""
-        if self.process:
-            self.process.terminate()
-            self.process = None
+            msg = "No events found matching your criteria."
+            print(f"→ {msg}")
+            return msg
 
-# Standalone usage example
+        results_count = events_data.get("results_count", len(events))
+        total_found = events_data.get("total_found", results_count)
+        
+        # Start formatting
+        if "query" in events_data:
+            formatted = f"Found {results_count} events matching '{events_data['query']}':\n\n"
+        else:
+            formatted = f"Found {results_count} events:\n\n"
+
+        # Add note about limited results if applicable
+        if len(events) < total_found:
+            formatted += f"(Showing top {len(events)} of {total_found} total results)\n\n"
+
+        # Format each event
+        for i, event in enumerate(events[:10], 1):  # Limit to 10 for LLM context
+            formatted += f"{i}. {event.get('title', 'Untitled Event')}\n"
+            
+            location = event.get('location', 'Location TBA')
+            if location:
+                formatted += f"   📍 Location: {location}\n"
+            
+            start_date = event.get('startDateTime', 'Date TBA')
+            if start_date:
+                formatted += f"   📅 Date: {start_date}\n"
+            
+            # Price formatting
+            if event.get('isFree', False):
+                formatted += f"   💰 Price: Free\n"
+            elif event.get('price'):
+                formatted += f"   💰 Price: ${event.get('price')}\n"
+            else:
+                formatted += f"   💰 Price: TBA\n"
+            
+            category = event.get('category', 'Uncategorized')
+            if category:
+                formatted += f"   🏷️ Category: {category}\n"
+            
+            organizer = event.get('organizer')
+            if organizer:
+                formatted += f"   👥 Organizer: {organizer}\n"
+            
+            tags = event.get('tags')
+            if tags:
+                formatted += f"   🏷️ Tags: {tags}\n"
+            
+            formatted += "\n"
+
+        result = formatted.strip()
+        print(f"✓ Formatted {len(events)} events for LLM ({len(result)} characters)")
+        return result
+
+    async def health_check(self) -> Dict[str, Any]:
+        """Check if the EventHub API is healthy"""
+        print("→ Performing health check")
+        
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(f"{self.base_url}/")
+                response.raise_for_status()
+                health_data = response.json()
+                
+            print(f"✓ Health check passed: {health_data.get('status', 'unknown')}")
+            return health_data
+            
+        except Exception as e:
+            error_msg = f"Health check failed: {str(e)}"
+            print(f"✗ {error_msg}")
+            return {"error": error_msg, "status": "unhealthy"}
+
+
 async def test_client():
-    """Test the MCP client"""
-    client = EventRAGClient()
+    """Test the EventRAG client functionality"""
+    print("=" * 60)
+    print("Starting EventRAG Client Tests")
+    print("=" * 60)
     
-    try:
-        await client.connect()
+    # Test with different URLs
+    test_urls = [
+        "http://127.0.0.1:8000"  # Local development # Uncomment and update for HF Spaces
+        # "https://your-app.onrender.com",  # Uncomment and update for Render
+    ]
+    
+    for base_url in test_urls:
+        print(f"\n🧪 Testing with: {base_url}")
+        print("-" * 40)
         
-        # Test search
-        print("Testing event search...")
-        search_result = await client.search_events("free tech events in San Francisco")
-        formatted = await client.format_events_for_llm(search_result)
-        print("Search Results:")
-        print(formatted)
-        print("-" * 50)
+        client = EventRAGClient(base_url=base_url)
+
+        try:
+            # Health check
+            print("\n1. Testing health check...")
+            health = await client.health_check()
+            if "error" not in health:
+                print(f"✓ API Status: {health.get('status', 'unknown')}")
+                print(f"✓ MCP Server Active: {health.get('mcp_server_active', False)}")
+            else:
+                print(f"✗ Health check failed: {health['error']}")
+                continue  # Skip other tests if health check fails
+            
+            # Test event search
+            print("\n2. Testing event search...")
+            search_query = "free"
+            search_result = await client.search_events(search_query)
+            formatted = await client.format_events_for_llm(search_result)
+            
+            print("Search Results Preview:")
+            print("-" * 30)
+            print(formatted[:500] + "..." if len(formatted) > 500 else formatted)
+            
+            # Test get all events
+            print("\n3. Testing get all events...")
+            all_events = await client.get_all_events()
+            if "error" not in all_events:
+                total = all_events.get('total_events', 0)
+                returned = all_events.get('returned_events', 0)
+                print(f"✓ Total events available: {total}")
+                print(f"✓ Events returned: {returned}")
+            else:
+                print(f"✗ Get all events failed: {all_events['error']}")
+            
+        except Exception as e:
+            print(f"\n✗ Tests failed for {base_url}: {e}")
         
-        # Test get all
-        print("Testing get all events...")
-        all_events = await client.get_all_events()
-        print(f"Total events available: {all_events.get('total_events', 0)}")
-        
-    except Exception as e:
-        print(f"Test failed: {e}")
-    finally:
-        client.cleanup()
+        print(f"\n{'='*40}")
+
+    print("\nAll endpoint tests completed!")
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     asyncio.run(test_client())
