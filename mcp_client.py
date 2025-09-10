@@ -5,7 +5,7 @@ import httpx
 
 
 class EventRAGClient:
-    def __init__(self, base_url: str = "http://127.0.0.1:8080"): #https://sench729-eventhub.hf.space
+    def __init__(self, base_url: str = "https://sench729-eventhub.hf.space"): #https://sench729-eventhub.hf.space
         self.base_url = base_url.rstrip("/")
         self.timeout = 30.0
         print(f"→ EventRAGClient initialized with base_url: {self.base_url}")
@@ -217,7 +217,7 @@ async def test_client():
     
     # Test with different URLs
     test_urls = [
-        "http://127.0.0.1:8000"  # Local development # Uncomment and update for HF Spaces
+        "https://sench729-eventhub.hf.space"  # Local development # Uncomment and update for HF Spaces
         # "https://your-app.onrender.com",  # Uncomment and update for Render
     ]
     
