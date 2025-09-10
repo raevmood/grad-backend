@@ -49,7 +49,7 @@ class EventHubChatbot:
     def __init__(self, session_id: str = "default"):
         """Initialize all chatbot components with dual RAG"""
         try:
-            self.retriever = DualRAGRetriever()  # Updated to dual retriever
+            self.retriever = DualRAGRetriever("https://sench729-eventhub.hf.space")  # Updated to dual retriever
             self.retriever_available = True
         except Exception as e:
             print(f"✗ Retriever error: {e}")
@@ -65,40 +65,40 @@ class EventHubChatbot:
         self.prompts = EventHubPrompts()
         self.memory = EventHubMemory(session_id=session_id)
     
-    def get_response(self, user_input: str, retrieval_mode: str = "combined") -> tuple[str, list[str]]:
+    async def get_response(self, user_input: str, retrieval_mode: str = "combined") -> tuple[str, list[str]]:
         """Get chatbot response with flexible retrieval options"""
         try:
             context = ""
             sources_used = []
-            
+        
             # Get context based on retrieval mode
             if self.retriever_available and retrieval_mode != "none":
                 if retrieval_mode == "combined":
-                    context = self.retriever.get_formatted_context(user_input, n_results=2)
+                    context = await self.retriever.get_formatted_context_async(user_input, n_results=2)
                     sources_used = ["knowledge_base", "current_events"]
                 elif retrieval_mode == "local":
                     context = self.retriever.get_local_context_only(user_input, n_results=2)
                     sources_used = ["knowledge_base"]
                 elif retrieval_mode == "events":
-                    context = self.retriever.get_events_context_only(user_input)
-                    sources_used = ["current_events"]
-            
+                    context = await self.retriever.get_events_context_only_async(user_input)
+                sources_used = ["current_events"]
+        
             # Create messages with context and history
             messages = self.prompts.create_messages(
                 human_input=user_input,
                 context=context,
                 chat_history=self.memory.get_recent_messages(6)
             )
-            
+        
             # Get LLM response
             response = self.llm.get_response(messages)
-            
+        
             # Save to memory
             self.memory.add_user_message(user_input)
             self.memory.add_ai_message(response)
-            
+        
             return response, sources_used
-            
+        
         except Exception as e:
             error_msg = f"I encountered an error: {str(e)[:100]}. Please try again."
             self.memory.add_user_message(user_input)
@@ -115,7 +115,7 @@ async def chat_endpoint(request: ChatRequest):
     """Main chat endpoint with flexible retrieval options"""
     try:
         chatbot = get_chatbot(request.session_id)
-        response, sources = chatbot.get_response(
+        response, sources = await chatbot.get_response(
             request.message, 
             request.retrieval_mode
         )

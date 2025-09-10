@@ -11,7 +11,7 @@ from mcp_client import EventRAGClient
 class DualRAGRetriever:
     """Combined retriever using both local knowledge base and remote event MCP"""
     
-    def __init__(self, base_url: str = "http://127.0.0.1:8000"):
+    def __init__(self, base_url: str = "https://sench729-eventhub.hf.space"):
         """Initialize both local and MCP retrievers"""
         try:
             self.local_retriever = EventHubRetriever()
