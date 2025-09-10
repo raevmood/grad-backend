@@ -1,6 +1,6 @@
 {
   "session_id": "default",
-  "timestamp": "2025-09-08T23:14:14.199841",
+  "timestamp": "2025-09-10T14:04:10.840299",
   "messages": [
     {
       "type": "human",
@@ -17,6 +17,54 @@
     {
       "type": "ai",
       "content": "Hello there! How can I help you with your events today? I'm here to assist with anything related to EventHub."
+    },
+    {
+      "type": "human",
+      "content": "fun"
+    },
+    {
+      "type": "ai",
+      "content": "I encountered an error: asyncio.run() cannot be called from a running event loop. Please try again."
+    },
+    {
+      "type": "human",
+      "content": "fun"
+    },
+    {
+      "type": "ai",
+      "content": "I encountered an error: asyncio.run() cannot be called from a running event loop. Please try again."
+    },
+    {
+      "type": "human",
+      "content": "fun"
+    },
+    {
+      "type": "ai",
+      "content": "I encountered an error: asyncio.run() cannot be called from a running event loop. Please try again."
+    },
+    {
+      "type": "human",
+      "content": "fun"
+    },
+    {
+      "type": "ai",
+      "content": "I encountered an error: asyncio.run() cannot be called from a running event loop. Please try again."
+    },
+    {
+      "type": "human",
+      "content": "fun"
+    },
+    {
+      "type": "ai",
+      "content": "I encountered an error: Cannot use synchronous method from within async context. Use get_events_context_only_async() instead. Please try again."
+    },
+    {
+      "type": "human",
+      "content": "fun"
+    },
+    {
+      "type": "ai",
+      "content": "I encountered an error: Cannot use synchronous method from within async context. Use get_events_context_only_async() instead. Please try again."
     }
   ]
 }
