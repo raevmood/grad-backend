@@ -5,13 +5,13 @@ import httpx
 
 
 class EventRAGClient:
-    def __init__(self, base_url: str = "https://sench729-eventhub.hf.space"): #https://sench729-eventhub.hf.space
+    def __init__(self, base_url: str = "https://sench729-eventhub.hf.space"):
         self.base_url = base_url.rstrip("/")
         self.timeout = 30.0
         print(f"→ EventRAGClient initialized with base_url: {self.base_url}")
 
-    async def _send_request(self, method: str, params: Optional[Dict] = None) -> Dict[str, Any]:
-        """Send JSON-RPC request to MCP server"""
+    async def _send_mcp_request(self, method: str, params: Optional[Dict] = None) -> Dict[str, Any]:
+        """Send JSON-RPC request to MCP server endpoint"""
         request = {
             "jsonrpc": "2.0",
             "id": 1,
@@ -19,7 +19,7 @@ class EventRAGClient:
             "params": params or {}
         }
         
-        print(f"→ Sending request: {method} with params: {params}")
+        print(f"→ Sending MCP request: {method} with params: {params}")
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -30,7 +30,7 @@ class EventRAGClient:
                 response.raise_for_status()
                 response_data = response.json()
                 
-            print(f"✓ Request {method} completed successfully")
+            print(f"✓ MCP request {method} completed successfully")
             
         except httpx.ConnectError as e:
             error_msg = f"Connection failed to {self.base_url}: {e}"
@@ -56,35 +56,75 @@ class EventRAGClient:
 
         return response_data.get("result", {})
 
+    async def _send_direct_request(self, endpoint: str, payload: Dict) -> Dict[str, Any]:
+        """Send direct request to FastAPI endpoints"""
+        print(f"→ Sending direct request to {endpoint}")
+        
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.post(
+                    f"{self.base_url}{endpoint}",
+                    json=payload
+                )
+                response.raise_for_status()
+                response_data = response.json()
+                
+            print(f"✓ Direct request to {endpoint} completed successfully")
+            return response_data
+            
+        except Exception as e:
+            error_msg = f"Direct request to {endpoint} failed: {e}"
+            print(f"✗ {error_msg}")
+            raise Exception(error_msg)
+
     async def search_events(self, query: str, user_id: str = "default") -> Dict[str, Any]:
         """Search for events using natural language query"""
         print(f"→ Searching events: query='{query}', user_id='{user_id}'")
         
         try:
-            result = await self._send_request(
-                "tools/call",
-                {
-                    "name": "search_events",
-                    "arguments": {"query": query, "user_id": user_id}
-                }
-            )
+            # Try MCP endpoint first (preferred for RAG context)
+            try:
+                result = await self._send_mcp_request(
+                    "tools/call",
+                    {
+                        "name": "search_events",
+                        "arguments": {"query": query, "user_id": user_id}
+                    }
+                )
 
-            if "content" in result and len(result["content"]) > 0:
-                content_text = result["content"][0].get("text", "{}")
-                parsed_result = json.loads(content_text)
-                
-                # Check if result contains error
-                if "error" in parsed_result:
-                    print(f"✗ Search returned error: {parsed_result['error']}")
+                if "content" in result and len(result["content"]) > 0:
+                    content_text = result["content"][0].get("text", "{}")
+                    parsed_result = json.loads(content_text)
+                    
+                    if "error" in parsed_result:
+                        print(f"✗ MCP search returned error: {parsed_result['error']}")
+                        return parsed_result
+                    
+                    event_count = parsed_result.get("results_count", 0)
+                    print(f"✓ MCP search completed: found {event_count} events")
                     return parsed_result
+                else:
+                    raise Exception("No content in MCP response")
+                    
+            except Exception as mcp_error:
+                print(f"✗ MCP search failed: {mcp_error}, trying direct API...")
                 
-                event_count = parsed_result.get("results_count", 0)
-                print(f"✓ Search completed: found {event_count} events")
-                return parsed_result
-            else:
-                error_msg = "No response content from server"
-                print(f"✗ {error_msg}")
-                return {"error": error_msg}
+                # Fallback to direct FastAPI endpoint
+                direct_result = await self._send_direct_request("/search", {
+                    "query": query,
+                    "user_id": user_id
+                })
+                
+                # Convert direct API response to MCP format
+                events = direct_result.get("results", [])
+                formatted_result = {
+                    "query": query,
+                    "results_count": len(events),
+                    "events": events[:10]
+                }
+                
+                print(f"✓ Direct search completed: found {len(events)} events")
+                return formatted_result
                 
         except Exception as e:
             error_msg = f"Search failed: {str(e)}"
@@ -96,28 +136,33 @@ class EventRAGClient:
         print("→ Fetching all events")
         
         try:
-            result = await self._send_request(
-                "tools/call",
-                {"name": "get_all_events", "arguments": {}}
-            )
+            # Try MCP endpoint first
+            try:
+                result = await self._send_mcp_request(
+                    "tools/call",
+                    {"name": "get_all_events", "arguments": {}}
+                )
 
-            if "content" in result and len(result["content"]) > 0:
-                content_text = result["content"][0].get("text", "{}")
-                parsed_result = json.loads(content_text)
-                
-                # Check if result contains error
-                if "error" in parsed_result:
-                    print(f"✗ Get all events returned error: {parsed_result['error']}")
+                if "content" in result and len(result["content"]) > 0:
+                    content_text = result["content"][0].get("text", "{}")
+                    parsed_result = json.loads(content_text)
+                    
+                    if "error" in parsed_result:
+                        print(f"✗ MCP get all events returned error: {parsed_result['error']}")
+                        return parsed_result
+                    
+                    total_events = parsed_result.get("total_events", 0)
+                    returned_events = len(parsed_result.get("events", []))
+                    print(f"✓ MCP retrieved {returned_events} of {total_events} total events")
                     return parsed_result
-                
-                total_events = parsed_result.get("total_events", 0)
-                returned_events = parsed_result.get("returned_events", 0)
-                print(f"✓ Retrieved {returned_events} of {total_events} total events")
-                return parsed_result
-            else:
-                error_msg = "No response content from server"
-                print(f"✗ {error_msg}")
-                return {"error": error_msg}
+                else:
+                    raise Exception("No content in MCP response")
+                    
+            except Exception as mcp_error:
+                print(f"✗ MCP get all events failed: {mcp_error}")
+                # For get_all_events, we don't have a direct FastAPI equivalent
+                # so we'll search with a broad query
+                return await self.search_events("events")
                 
         except Exception as e:
             error_msg = f"Failed to get events: {str(e)}"
@@ -215,10 +260,10 @@ async def test_client():
     print("Starting EventRAG Client Tests")
     print("=" * 60)
     
-    # Test with different URLs
+    # Test with HF Spaces URL
     test_urls = [
-        "https://sench729-eventhub.hf.space"  # Local development # Uncomment and update for HF Spaces
-        # "https://your-app.onrender.com",  # Uncomment and update for Render
+        "https://sench729-eventhub.hf.space",  # HF Spaces deployment
+        # "http://127.0.0.1:8000"  # Local development
     ]
     
     for base_url in test_urls:
@@ -233,14 +278,16 @@ async def test_client():
             health = await client.health_check()
             if "error" not in health:
                 print(f"✓ API Status: {health.get('status', 'unknown')}")
-                print(f"✓ MCP Server Active: {health.get('mcp_server_active', False)}")
+                # HF Spaces might not have mcp_server_active field
+                mcp_active = health.get('mcp_server_active', 'unknown')
+                print(f"✓ MCP Server Active: {mcp_active}")
             else:
                 print(f"✗ Health check failed: {health['error']}")
                 continue  # Skip other tests if health check fails
             
             # Test event search
             print("\n2. Testing event search...")
-            search_query = "free"
+            search_query = "music"
             search_result = await client.search_events(search_query)
             formatted = await client.format_events_for_llm(search_result)
             
@@ -253,7 +300,7 @@ async def test_client():
             all_events = await client.get_all_events()
             if "error" not in all_events:
                 total = all_events.get('total_events', 0)
-                returned = all_events.get('returned_events', 0)
+                returned = len(all_events.get('events', []))
                 print(f"✓ Total events available: {total}")
                 print(f"✓ Events returned: {returned}")
             else:
@@ -266,7 +313,6 @@ async def test_client():
 
     print("\nAll endpoint tests completed!")
     print("=" * 60)
-
 
 if __name__ == "__main__":
     asyncio.run(test_client())
