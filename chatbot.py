@@ -19,7 +19,7 @@ app = FastAPI(
 # Configure CORS for testing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://sench729-eventhub.hf.space", "http://localhost:8080", "https://eventhu-5fow.vercel.app/"],
+    allow_origins=["https://sench729-eventhub.hf.space", "http://localhost:8080", "https://eventhu-5fow.vercel.app/", "https://event-hub-coral.vercel.app/"],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
