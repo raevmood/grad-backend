@@ -7,8 +7,18 @@ from prompt import EventHubPrompts
 from memory import EventHubMemory
 from dotenv import load_dotenv
 import uvicorn
+import re
 
 load_dotenv()
+
+import re
+def filter_pii(text: str) -> str:
+    """Remove PII from text using regex patterns"""
+    text = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', text)    
+    text = re.sub(r'(\+?1?[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})', '[PHONE]', text)    
+    text = re.sub(r'\b(?:\d{4}[-\s]?){3}\d{4}\b', '[CARD]', text)    
+    text = re.sub(r'\b\d{3}-?\d{2}-?\d{4}\b', '[SSN]', text)    
+    return text
 
 app = FastAPI(
     title="EventHub Chatbot API",
@@ -120,9 +130,10 @@ async def health_check():
 async def chat_endpoint(request: ChatRequest):
     """Main chat endpoint with flexible retrieval options"""
     try:
+        filtered_message = filter_pii(request.message)
         chatbot = get_chatbot(request.session_id)
         response, sources = await chatbot.get_response(
-            request.message, 
+            filtered_message, 
             request.retrieval_mode
         )
         
