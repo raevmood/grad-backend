@@ -23,7 +23,8 @@ app.add_middleware(
         "https://sench729-eventhub.hf.space",
         "http://localhost:8080",
         "https://eventhu-5fow.vercel.app",
-        "https://event-hub-coral.vercel.app"
+        "https://event-hub-coral.vercel.app",
+        "https://event-hub0.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
