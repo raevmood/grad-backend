@@ -34,7 +34,8 @@ app.add_middleware(
         "http://localhost:8080",
         "https://eventhu-5fow.vercel.app",
         "https://event-hub-coral.vercel.app",
-        "https://event-hub0.vercel.app"
+        "https://event-hub0.vercel.app",
+        "https://eventhu.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST"],
